@@ -10,54 +10,98 @@ fs.createReadStream('/home/leena/Pictures/nut.png')
         for (var y = 0; y < this.height; y++) {
             for (var x = 0; x < this.width; x++) {
                 var idx = (this.width * y + x) << 2;
-                if (this.data[idx] === 7 && this.data[idx + 1] === 84 && this.data[idx + 2] === 19) {
-                    drawUp(idx, y, x);
-                }
-                if (this.data[idx] === 139 && this.data[idx + 1] === 57 && this.data[idx + 2] === 137) {
-                    this.data[idx] = 255;
-                    this.data[idx + 1] = 255;
-                    this.data[idx + 2] = 255;
-                }
-                if (this.data[idx] === 182 && this.data[idx + 1] === 149 && this.data[idx + 2] === 72) {
-                    drawRight(idx, y, x);
-                }
-                if (this.data[idx] === 123 && this.data[idx + 1] === 131 && this.data[idx + 2] === 154) {
-                    this.data[idx] = 255;
-                    this.data[idx + 1] = 255;
-                    this.data[idx + 2] = 255;
-                }
+                    checkColor(this.data, this.width, this.height, idx, y, x);
             }
         }
 
         this.pack().pipe(fs.createWriteStream('/home/leena/Pictures/modifiednut.png'));
     });
 
-function drawUp(location, sub_y, sub_x) {
-    for (sub_y; sub_y < this.height; sub_y++) {
-        var sub_idx = (this.width * sub_y + sub_x) << 2;
-        if (this.data[sub_idx] === 51 && this.data[sub_idx + 1] === 69 && this.data[sub_idx + 2] === 169) {
+function checkColor(data, width, height, idx, y, x) {
+    console.log("checkColor x: " + x + " y: " + y + " idx: " + idx);
+    if (data[idx] === 7 && data[idx + 1] === 84 && data[idx + 2] === 19) {
+        drawUp(data, width, height, y, x);
+    }
+    if (data[idx] === 139 && data[idx + 1] === 57 && data[idx + 2] === 137) {
+        drawLeft(data, width, height, y, x)
+    }
+    if (data[idx] === 182 && data[idx + 1] === 149 && data[idx + 2] === 72) {
+        drawOneRight(data, width, y, x);
+    }
+    if (data[idx] === 123 && data[idx + 1] === 131 && data[idx + 2] === 154) {
+        drawOneLeft(data, width, y, x);
+    }
+}
+function drawOneRight(data, width, sub_y, sub_x) {
+    console.log("> -- x: " + sub_x + " y: " + sub_y);
+        var sub_idx = getXLocation(sub_x++, sub_y++, width);
+        if (data[sub_idx] === 51 && data[sub_idx + 1] === 69 && data[sub_idx + 2] === 169) {
             return;
         } else {
-            colorWhite(sub_idx, sub_idx+1, sub_idx+2);
+            colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+        }
+}
+
+function drawOneLeft(data, width, sub_y, sub_x) {
+    console.log("< -- x: " + sub_x + " y: " + sub_y);
+    var sub_idx = getXLocation(sub_x--, sub_y--, width);
+    if (data[sub_idx] === 51 && data[sub_idx + 1] === 69 && data[sub_idx + 2] === 169) {
+        return;
+    } else {
+        colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+    }
+}
+
+function drawUp(data, width, height, sub_y, sub_x) {
+    console.log("^^^ -- x: " + sub_x + " y: " + sub_y);
+    for (sub_y; sub_y < height; sub_y++) {
+        var sub_idx = getXLocation(sub_x, sub_y, width);
+        if (data[sub_idx] === 51 && data[sub_idx + 1] === 69 && data[sub_idx + 2] === 169) {
+            return;
+        } else {
+            colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+            checkColor(data, width, height, sub_idx, sub_y, sub_x);
         }
     }
 }
 
-function drawRight(location, sub_y, sub_x) {
-    for (sub_x; sub_x < this.width; sub_x++) {
-        var sub_idx = (this.width * sub_y + sub_x) << 2;
-        if (this.data[sub_idx] === 51 && this.data[sub_idx + 1] === 69 && this.data[sub_idx + 2] === 169) {
+function drawRight(data, width, height, sub_y, sub_x) {
+    console.log(">>> -- x: " + sub_x + " y: " + sub_y);
+    for (sub_x; sub_x < width; sub_x++) {
+        var sub_idx = getXLocation(sub_x, sub_y, width);
+        if (data[sub_idx] === 51 && data[sub_idx + 1] === 69 && data[sub_idx + 2] === 169) {
             return;
         } else {
-            colorWhite(sub_idx, sub_idx+1, sub_idx+2);
+            colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+            checkColor(data, width, height, sub_idx, sub_y, sub_x);
         }
     }
 }
 
-function colorWhite(r, g, b) {
-    this.data[r] = 255;
-    this.data[g] = 255;
-    this.data[b] = 255;
+function drawLeft(data, width, height, sub_y, sub_x) {
+    console.log("<<< -- x: " + sub_x + " y: " + sub_y);
+    for (sub_x; sub_x > 0; sub_x--) {
+        var sub_idx = getXLocation(sub_x, sub_y, width);
+        if (data[sub_idx] === 51 && data[sub_idx + 1] === 69 && data[sub_idx + 2] === 169) {
+            return;
+        } else {
+            colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+            checkColor(data, width, height, sub_idx, sub_y, sub_x);
+        }
+    }
+}
+
+function getXLocation(x, y, width) {
+    var result = (width * y + x) << 2;
+    console.log("Calc -- width: " + width + " x: " + x + " y: " + y + " = " + result);
+    return result;
+}
+
+function colorWhite(data, r, g, b) {
+    console.log("RGB: " + r + "," + g + "," + b);
+    data[r] = 255;
+    data[g] = 255;
+    data[b] = 255;
 }
 
 /*Ala piirtää ylöspäin, kun pikselin väri on 7, 84, 19.
