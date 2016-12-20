@@ -34,7 +34,7 @@ function checkColor(data, width, height, idx, y, x) {
 }
 function drawOneRight(data, width, sub_y, sub_x) {
     console.log("> -- x: " + sub_x + " y: " + sub_y);
-        var sub_idx = getXLocation(sub_x++, sub_y++, width);
+        var sub_idx = getXLocation(sub_x++, sub_y, width);
         if (data[sub_idx] === 51 && data[sub_idx + 1] === 69 && data[sub_idx + 2] === 169) {
             return;
         } else {
@@ -44,7 +44,7 @@ function drawOneRight(data, width, sub_y, sub_x) {
 
 function drawOneLeft(data, width, sub_y, sub_x) {
     console.log("< -- x: " + sub_x + " y: " + sub_y);
-    var sub_idx = getXLocation(sub_x--, sub_y--, width);
+    var sub_idx = getXLocation(sub_x--, sub_y, width);
     if (data[sub_idx] === 51 && data[sub_idx + 1] === 69 && data[sub_idx + 2] === 169) {
         return;
     } else {
@@ -56,12 +56,8 @@ function drawUp(data, width, height, sub_y, sub_x) {
     console.log("^^^ -- x: " + sub_x + " y: " + sub_y);
     for (sub_y; sub_y < height; sub_y++) {
         var sub_idx = getXLocation(sub_x, sub_y, width);
-        if (data[sub_idx] === 51 && data[sub_idx + 1] === 69 && data[sub_idx + 2] === 169) {
-            return;
-        } else {
-            colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
-            checkColor(data, width, height, sub_idx, sub_y, sub_x);
-        }
+        colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+        checkColor(data, width, height, sub_idx, sub_y, sub_x);
     }
 }
 
@@ -69,25 +65,17 @@ function drawRight(data, width, height, sub_y, sub_x) {
     console.log(">>> -- x: " + sub_x + " y: " + sub_y);
     for (sub_x; sub_x < width; sub_x++) {
         var sub_idx = getXLocation(sub_x, sub_y, width);
-        if (data[sub_idx] === 51 && data[sub_idx + 1] === 69 && data[sub_idx + 2] === 169) {
-            return;
-        } else {
-            colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
-            checkColor(data, width, height, sub_idx, sub_y, sub_x);
-        }
+        colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+        checkColor(data, width, height, sub_idx, sub_y, sub_x);
     }
 }
 
 function drawLeft(data, width, height, sub_y, sub_x) {
     console.log("<<< -- x: " + sub_x + " y: " + sub_y);
     for (sub_x; sub_x > 0; sub_x--) {
-        var sub_idx = getXLocation(sub_x, sub_y, width);
-        if (data[sub_idx] === 51 && data[sub_idx + 1] === 69 && data[sub_idx + 2] === 169) {
-            return;
-        } else {
-            colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
-            checkColor(data, width, height, sub_idx, sub_y, sub_x);
-        }
+        var sub_idx = getXLocation(sub_x-1, sub_y, width);
+        colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+        checkColor(data, width, height, sub_idx, sub_y, sub_x);
     }
 }
 
@@ -98,10 +86,14 @@ function getXLocation(x, y, width) {
 }
 
 function colorWhite(data, r, g, b) {
-    console.log("RGB: " + r + "," + g + "," + b);
-    data[r] = 255;
-    data[g] = 255;
-    data[b] = 255;
+    if (data[r] === 51 && data[g] === 69 && data[b] === 169) {
+        return;
+    } else {
+        console.log("RGB: " + r + "," + g + "," + b);
+        data[r] = 255;
+        data[g] = 255;
+        data[b] = 255;
+    }
 }
 
 /*Ala piirtää ylöspäin, kun pikselin väri on 7, 84, 19.
