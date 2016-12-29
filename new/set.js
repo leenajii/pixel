@@ -9,85 +9,95 @@ var fs = require("fs"),
     result = null,
     originalPixels = null,
     buf = fs.readFileSync('/home/leena/Pictures/nut.png'),
-    img = new PngImg(buf);
+    img = new PngImg(buf),
+    processed = new Map();
 
 
 function getRgb(x, y) {
-    console.log("GET " + x + ", " +y);
     return img.get(x, y);
 }
 
+function setProcessed(x, y) {
+    var xy = x + "," + y;
+    if (processed[xy]) {
+        processed[xy] = processed[xy] + 1;
+    } else {
+        processed[xy] = 1;
+    }
+}
+
 function color(x, y, rgb) {
-    console.log("Setting " + x + ", " + y + " : " + JSON.stringify(rgb));
+    //console.log("Setting " + x + ", " + y + " : " + JSON.stringify(rgb));
+    setProcessed(x, y);
     img.set(x, y, rgb);
 }
 
 function drawUp(x, y) {
-    console.log("\n\n ***************** UP ****************");
-    for (i = y; i <= height; i++) {
-        console.log("up " + x + ", " +i);
+    for (i = y; i < height; i++) {
         var rgb = getRgb(x, i);
         if (!actions.stop(rgb)) {
-            var idx = getLocation(x, i);
-            console.log("get location " + x + ", " +i + " = " + idx);
-            color(idx, {"r": 255, "g": 255, "b": 255});
-            //if (actions.turnLeft(rgb)) {
-            //    console.log("Turn left");
-            //    drawLeft(x, i);
-            //} else if (actions.turnRight(rgb)) {
-            //    console.log("Turn right");
+            color(x, i, {r: 0, g: 0,  b:  0, a: 255});
+            if (actions.turnLeft(rgb)) {
+                drawLeft(x, i);
+            }
+            //if (actions.turnRight(rgb)) {
             //    drawRight(x, i);
             //}
         } else {
-            console.log("-----STOP UP");
+            i = height + 1;
             return;
         }
     }
-    console.log("----- Iterated through up");
+}
+
+function drawDown(x, y) {
+    for (i = y; i >=0; i--) {
+        var rgb = getRgb(x, i);
+        if (!actions.stop(rgb)) {
+            color(x, i, {r: 0, g: 0,  b:  0, a: 255});
+            if (actions.turnLeft(rgb)) {
+                drawLeft(x, i);
+            }
+            //if (actions.turnRight(rgb)) {
+            //    drawRight(x, i);
+            //}
+        } else {
+            i=-1;
+            return;
+        }
+    }
 }
 
 function drawLeft(x, y) {
-    console.log("\n\n ***************** LEFT ****************");
     for (i = x; i >= 0; i--) {
-        console.log("left " + i + ", " +y);
         var rgb = getRgb(i, y);
         if (!actions.stop(rgb)) {
+            color(i, y, {r: 0, g: 0,  b:  0, a: 255});
             if (actions.turnRight(rgb)) {
                 console.log("Turn right --> up");
-                drawUp(i, y++);
+                drawUp(i, y);
             }
-            //} else {
-            //    var idx = getLocation(i, y);
-            //    console.log("Color lilac " + i + ", " + y);
-            //    color(idx, {"r": 191, "g": 62, "b":255});
+            //if (actions.turnLeft(rgb)) {
+            //    console.log("Turn left --> down");
+            //    drawDown(i, y);
             //}
         } else {
-            console.log("------Stop left");
+            i=-1;
             return;
         }
     }
-    console.log("----- Iterated through left");
 }
 
 function doSomething(x, y) {
     var rgb = getRgb(x, y);
-    if (actions.stop(rgb)) {
-        color(x, y, {r: 255, g: 0, b:0, a:255});
-        return;
-    } else if (actions.turnLeft(rgb)) {                 //green
-        color(x, y, {r: 0, g: 255, b:0, a:255});
-    } else if (actions.turnRight(rgb)) {                //red
-        color(x, y, {r: 255, g: 0, b:0, a:255});
-    } else if (actions.drawUp(rgb)) {                   //white
-        console.log("Draw up!");
-        color(x, y, {r: 255, g: 255, b:255, a:255});
-        //drawUp(x, y);
-    } else if (actions.drawLeft(rgb)) {                 //lilac
-        console.log("Draw left!");
-        color(x, y, {r: 191, g: 62, b:255, a:255});
-        //drawLeft(x, y);
+    if (actions.drawUp(rgb)) {
+        color(x, y, {r: 0, g: 0, b: 0, a: 255});
+        drawUp(x, y);
+    } else if (actions.drawLeft(rgb)) {
+        color(x, y, {r: 0, g: 0,  b:  0, a: 255});
+        drawLeft(x, y);
     } else {
-        color(x, y, {r: 0, g: 0, b:0, a:255});
+        color(x, y, {r: 255, g: 255,  b:  255, a: 255});
     }
 }
 
@@ -96,13 +106,11 @@ function doSomething(x, y) {
 function run() {
     for (var x = (width-1); x >= 0; x--) {
         for (var y = 0; y < height; y++) {
-            //console.log(x + ", " + y);
             doSomething(x, y);
-            //console.log("x:" + x + " y: " + y + " rgb: " + JSON.stringify(rgb));
         }
     }
 
-    img.save('/home/leena/Pictures/newnut.png', function(error) {
+    img.save('/home/leena/Pictures/startatpoint2.png', function(error) {
         if(error) {
             console.error('Error:', error);
         } else {
@@ -112,3 +120,11 @@ function run() {
 }
 
 run();
+Object.keys(processed).forEach(function(key) {
+    var value = processed[key];
+    console.log(key + ": " + value);
+});
+
+console.log(processed);
+console.log(Object.keys(processed).length);
+console.log(width*height);

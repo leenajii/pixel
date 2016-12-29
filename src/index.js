@@ -1,80 +1,105 @@
 var fs = require('fs'),
-    PNG = require('pngjs').PNG;
+    PNG = require('pngjs').PNG
+    result = [];
 
 fs.createReadStream('/home/leena/Pictures/nut.png')
     .pipe(new PNG({
         filterType: 4
     }))
     .on('parsed', function() {
+        fs.writeFile("/tmp/test", "" + this.data, function(err) {
+            if(err) {
+                return console.log(err);
+            }
 
+            console.log("The file was saved!");
+        });
         for (var y = 0; y < this.height; y++) {
-            for (var x = 0; x < this.width; x++) {
+            for (var x = this.width; x >= 0; x--) {
                 var idx = (this.width * y + x) << 2;
-                    checkColor(this.data, this.width, this.height, idx, y, x);
+                    checkColor([], this.data, this.width, this.height, idx, y, x);
             }
         }
 
         this.pack().pipe(fs.createWriteStream('/home/leena/Pictures/modifiednut.png'));
     });
 
-function checkColor(data, width, height, idx, y, x) {
+function checkColor(resultArray, data, width, height, idx, y, x) {
+    var res1;
     console.log("checkColor x: " + x + " y: " + y + " idx: " + idx);
     if (data[idx] === 7 && data[idx + 1] === 84 && data[idx + 2] === 19) {
-        drawUp(data, width, height, y, x);
+        drawUp(data, resultArray, width, height, y, x);
+    } else if (data[idx] === 139 && data[idx + 1] === 57 && data[idx + 2] === 137) {
+        drawLeft(data, resultArray, width, height, y, x)
+    } else if (data[idx] === 182 && data[idx + 1] === 149 && data[idx + 2] === 72) {
+        drawOneRight(data, resultArray, width, y, x);
+    } else if (data[idx] === 123 && data[idx + 1] === 131 && data[idx + 2] === 154) {
+        drawOneLeft(data, resultArray, width, y, x);
+    } else {
+        res1 = storeColor(resultArray, idx, getRgb(data, idx));
     }
-    if (data[idx] === 139 && data[idx + 1] === 57 && data[idx + 2] === 137) {
-        drawLeft(data, width, height, y, x)
-    }
-    if (data[idx] === 182 && data[idx + 1] === 149 && data[idx + 2] === 72) {
-        drawOneRight(data, width, y, x);
-    }
-    if (data[idx] === 123 && data[idx + 1] === 131 && data[idx + 2] === 154) {
-        drawOneLeft(data, width, y, x);
-    }
+    return res1;
 }
-function drawOneRight(data, width, sub_y, sub_x) {
+
+function getRgb(pixels, idx) {
+    var rgb = {"r": pixels[idx], "g": pixels[idx+1], "b": pixels[idx+2]};
+    return rgb;
+}
+
+function storeColor(newData, o_idx, rgb) {
+    var newArr = [];
+    newArr.splice(o_idx, 0, rgb.r);
+    newArr.splice(o_idx+1, 0, rgb.g);
+    newArr.splice(o_idx+2, 0, rgb.b);
+    newArr.splice(o_idx+3, 0, 255);
+    console.log("newArr: " + newArr);
+    console.log("Result: " + newData);
+    return newData.concat(newArr)
+}
+
+function drawOneRight(data, res1R, width, sub_y, sub_x) {
     console.log("> -- x: " + sub_x + " y: " + sub_y);
         var sub_idx = getXLocation(sub_x++, sub_y, width);
         if (data[sub_idx] === 51 && data[sub_idx + 1] === 69 && data[sub_idx + 2] === 169) {
             return;
         } else {
-            colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+            colorWhite(data, res1R, sub_idx, sub_idx+1, sub_idx+2);
         }
 }
 
-function drawOneLeft(data, width, sub_y, sub_x) {
+function drawOneLeft(data, res1L, width, sub_y, sub_x) {
     console.log("< -- x: " + sub_x + " y: " + sub_y);
     var sub_idx = getXLocation(sub_x--, sub_y, width);
     if (data[sub_idx] === 51 && data[sub_idx + 1] === 69 && data[sub_idx + 2] === 169) {
         return;
     } else {
-        colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+        colorWhite(data, res1L, sub_idx, sub_idx+1, sub_idx+2);
     }
 }
 
-function drawUp(data, width, height, sub_y, sub_x) {
+function drawUp(data, resU, width, height, sub_y, sub_x) {
     console.log("^^^ -- x: " + sub_x + " y: " + sub_y);
     for (sub_y; sub_y < height; sub_y++) {
         var sub_idx = getXLocation(sub_x, sub_y, width);
-        colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+        colorWhite(data, resU, sub_idx, sub_idx+1, sub_idx+2);
         checkColor(data, width, height, sub_idx, sub_y, sub_x);
     }
 }
 
-function drawRight(data, width, height, sub_y, sub_x) {
+function drawRight(data, resR, width, height, sub_y, sub_x) {
     console.log(">>> -- x: " + sub_x + " y: " + sub_y);
     for (sub_x; sub_x < width; sub_x++) {
         var sub_idx = getXLocation(sub_x, sub_y, width);
-        colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+        colorWhite(data, resR, sub_idx, sub_idx+1, sub_idx+2);
         checkColor(data, width, height, sub_idx, sub_y, sub_x);
     }
 }
 
-function drawLeft(data, width, height, sub_y, sub_x) {
+function drawLeft(data, resL, width, height, sub_y, sub_x) {
     console.log("<<< -- x: " + sub_x + " y: " + sub_y);
     for (sub_x; sub_x > 0; sub_x--) {
         var sub_idx = getXLocation(sub_x-1, sub_y, width);
-        colorWhite(data, sub_idx, sub_idx+1, sub_idx+2);
+        colorWhite(data, resL, sub_idx, sub_idx+1, sub_idx+2);
         checkColor(data, width, height, sub_idx, sub_y, sub_x);
     }
 }
@@ -85,10 +110,11 @@ function getXLocation(x, y, width) {
     return result;
 }
 
-function colorWhite(data, r, g, b) {
+function colorWhite(data, resW, r, g, b) {
     if (data[r] === 51 && data[g] === 69 && data[b] === 169) {
         return;
     } else {
+        storeColor(resW, r, {"r": 255, "g": 255, "b": 255});
         console.log("RGB: " + r + "," + g + "," + b);
         data[r] = 255;
         data[g] = 255;

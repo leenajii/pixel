@@ -13,6 +13,8 @@
     "get-pixels": "^3.3.0",
     "ndarray": "^1.0.18",
     "ndarray-scratch": "^1.2.0",
+    "png-image": "^1.0.1",
+    "png-img": "^2.1.1",
     "pngjs": "^3.0.0",
     "save-pixels": "^2.3.4"
   }
